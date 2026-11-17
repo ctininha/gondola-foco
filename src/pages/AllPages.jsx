@@ -20,6 +20,7 @@ export const Login = () => {
     setCarregando(true);
     setTimeout(() => {
       setCarregando(false);
+      localStorage.setItem("logado", "true"); // Guarda a sessão no navegador
       setLocation("/dashboard");
     }, 600);
   };
@@ -71,10 +72,10 @@ export const Login = () => {
 export const Dashboard = () => {
   const [, setLocation] = useLocation();
 
-  // Força passar pelo login se não estiver autenticado
-  if (!localStorage.getItem("logado")) { 
-    setLocation("/"); 
-    return null; 
+  // Segurança: se não estiver logado, redireciona para o login na raiz
+  if (!localStorage.getItem("logado")) {
+    setLocation("/");
+    return null;
   }
 
   const [corredores] = useState([
@@ -132,7 +133,7 @@ export const Dashboard = () => {
   );
 };
 
-// --- T03 · NOVA AUDITORIA (UPLOAD DE FICHEIROS PARA TCC) ---
+// --- T03 · NOVA AUDITORIA ---
 export const NewAnalysis = () => {
   const [, setLocation] = useLocation();
   const [gondolaFile, setGondolaFile] = useState(null);
@@ -405,23 +406,31 @@ export const History = () => (
 );
 
 // --- T12 · PERFIL ---
-export const Profile = () => (
-  <div className="screen" style={{ paddingBottom: "100px", alignItems: "center", textAlign: "center" }}>
-    <div style={{ width: "72px", height: "72px", backgroundColor: "#EBF3FE", color: "#1366E5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "24px", margin: "16px auto 12px" }}>A</div>
-    <h2 style={{ fontSize: "18px", fontWeight: "800", color: "#0F172A" }}>Ana · Repositora</h2>
-    <p style={{ fontSize: "12px", color: "#64748B", marginBottom: "24px" }}>Mercado Bom Preço</p>
+export const Profile = () => {
+  const [, setLocation] = useLocation();
 
-    <div style={{ width: "100%", marginTop: "20px" }}>
-      <Link href="/" style={{ textDecoration: "none", width: "100%" }}>
-        <button style={{ width: "100%", minHeight: "50px", backgroundColor: "white", color: "#DC2626", border: "1.5px solid #DC2626", borderRadius: "14px", fontSize: "15px", fontWeight: "600", cursor: "pointer" }}>
+  return (
+    <div className="screen" style={{ paddingBottom: "100px", alignItems: "center", textAlign: "center" }}>
+      <div style={{ width: "72px", height: "72px", backgroundColor: "#EBF3FE", color: "#1366E5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "24px", margin: "16px auto 12px" }}>A</div>
+      <h2 style={{ fontSize: "18px", fontWeight: "800", color: "#0F172A" }}>Ana · Repositora</h2>
+      <p style={{ fontSize: "12px", color: "#64748B", marginBottom: "24px" }}>Mercado Bom Preço</p>
+
+      <div style={{ width: "100%", marginTop: "20px" }}>
+        <button 
+          onClick={() => { 
+            localStorage.removeItem("logado"); // Limpa a sessão ao sair
+            setLocation("/"); 
+          }} 
+          style={{ width: "100%", minHeight: "50px", backgroundColor: "white", color: "#DC2626", border: "1.5px solid #DC2626", borderRadius: "14px", fontSize: "15px", fontWeight: "600", cursor: "pointer" }}
+        >
           Sair da Conta
         </button>
-      </Link>
-    </div>
+      </div>
 
-    <BottomNav active="perfil" />
-  </div>
-);
+      <BottomNav active="perfil" />
+    </div>
+  );
+};
 
 // --- BARRA DE NAVEGAÇÃO INFERIOR ---
 const BottomNav = ({ active }) => (
