@@ -131,7 +131,12 @@ export const ReviewPhoto = () => <div className="screen"><h2>T05 - Revisar Foto<
 export const AnalyzingProcess = () => <div className="screen"><h2>T06 - A processar IA...</h2><Link href="/analyses/123/result">Ver Resultado</Link></div>;
 export const AnalysisResult = () => <div className="screen"><h2>T07 - Nota da Gôndola: 92%</h2><Link href="/analyses/123/occurrences">Ver Ocorrências</Link></div>;
 export const OccurrencesList = () => <div className="screen"><h2>T08 - Lista de Ocorrências</h2><Link href="/analyses/occurrences/1">Detalhe do Item</Link></div>;
-export const OccurrenceDetail = () => <div className="screen"><h2>T09 - Esperado x Encontrado</h2><Link href="/analyses/123/success">Concluir Corredor</h2></Link></div>; // Ajustado link
+export const OccurrenceDetail = () => (
+  <div className="screen">
+    <h2>T09 - Esperado x Encontrado</h2>
+    <Link href="/analyses/123/success">Concluir Corredor</Link>
+  </div>
+);
 export const AnalysisSuccess = () => <div className="screen"><h2>T10 - Auditoria Concluída!</h2><Link href="/">Voltar ao Início</Link></div>;
 export const History = () => <div className="screen"><h2>T11 - Histórico</h2><Link href="/">Voltar</Link></div>;
 export const Profile = () => <div className="screen"><h2>T12 - Perfil e LGPD</h2><Link href="/">Voltar</Link></div>;
