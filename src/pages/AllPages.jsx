@@ -422,30 +422,86 @@ export const AnalysisSuccess = () => (
 );
 
 // --- T11 · HISTÓRICO ---
-export const History = () => (
-  <div className="screen" style={{ paddingBottom: "100px" }}>
-    <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#0F172A", marginBottom: "16px" }}>Histórico</h2>
+export const History = () => {
+  const [filtroPeriodo, setFiltroPeriodo] = useState("7d");
 
-    <div style={{ backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "16px", padding: "16px", marginBottom: "20px" }}>
-      <div style={{ fontSize: "12px", color: "#64748B", fontWeight: "600", marginBottom: "2px" }}>Nota média da semana</div>
-      <div style={{ fontSize: "28px", fontWeight: "800", color: "#0F172A", marginBottom: "12px" }}>93</div>
-      <div style={{ backgroundColor: "#FFFFFF", border: "1.5px solid #E2E8F0", borderRadius: "10px", height: "80px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "12px" }}>
-        [ Gráfico de evolução diária ]
+  return (
+    <div className="screen" style={{ paddingBottom: "100px" }}>
+      <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#0F172A", marginBottom: "16px" }}>Histórico</h2>
+
+      {/* Filtros de período */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+        <button 
+          onClick={() => setFiltroPeriodo("7d")} 
+          className={`badge ${filtroPeriodo === '7d' ? 'badge-success' : 'badge-neutral'}`}
+          style={{ padding: "8px 14px", cursor: "pointer", border: "none", fontSize: "12px", fontWeight: "600" }}
+        >
+          Últimos 7 dias
+        </button>
+        <button 
+          onClick={() => setFiltroPeriodo("todos")} 
+          className={`badge ${filtroPeriodo === 'todos' ? 'badge-success' : 'badge-neutral'}`}
+          style={{ padding: "8px 14px", cursor: "pointer", border: "none", fontSize: "12px", fontWeight: "600" }}
+        >
+          Todos os corredores
+        </button>
       </div>
-    </div>
 
-    <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "10px" }}>Hoje</h3>
-    <div style={{ padding: "14px", backgroundColor: "white", border: "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-      <div>
-        <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A" }}>Corredor 4 · Módulo B</div>
-        <div style={{ fontSize: "12px", color: "#64748B" }}>14:32 · 3 ocorrências</div>
+      {/* Cartão de Nota Média */}
+      <div style={{ backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "16px", padding: "16px", marginBottom: "20px" }}>
+        <div style={{ fontSize: "12px", color: "#64748B", fontWeight: "600", marginBottom: "2px" }}>Nota média da semana</div>
+        <div style={{ fontSize: "28px", fontWeight: "800", color: "#0F172A", marginBottom: "12px" }}>93</div>
+        <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "10px", height: "70px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "12px", fontWeight: "600" }}>
+          [ Gráfico de evolução diária ]
+        </div>
       </div>
-      <span className="badge badge-success">94</span>
-    </div>
 
-    <BottomNav active="historico" />
-  </div>
-);
+      {/* HOJE */}
+      <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748B", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Hoje</div>
+      
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+        <div style={{ padding: "14px", backgroundColor: "white", border: "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "2px" }}>Corredor 4 · Módulo B</div>
+            <div style={{ fontSize: "12px", color: "#64748B" }}>14:32 · 3 ocorrências</div>
+          </div>
+          <span className="badge badge-success">94</span>
+        </div>
+
+        <div style={{ padding: "14px", backgroundColor: "white", border: "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "2px" }}>Corredor 3 · Limpeza</div>
+            <div style={{ fontSize: "12px", color: "#64748B" }}>10:41 · 2 ocorrências</div>
+          </div>
+          <span className="badge badge-success">91</span>
+        </div>
+      </div>
+
+      {/* ONTEM */}
+      <div style={{ fontSize: "11px", fontWeight: "700", color: "#64748B", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Ontem</div>
+      
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+        <div style={{ padding: "14px", backgroundColor: "white", border: "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "2px" }}>Corredor 2 · Bebidas</div>
+            <div style={{ fontSize: "12px", color: "#64748B" }}>16:40 · sem ocorrências</div>
+          </div>
+          <span className="badge badge-success">100</span>
+        </div>
+
+        <div style={{ padding: "14px", backgroundColor: "white", border: "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "2px" }}>Corredor 1 · Mercearia</div>
+            <div style={{ fontSize: "12px", color: "#64748B" }}>15:12 · 1 ocorrência</div>
+          </div>
+          <span className="badge badge-success">94</span>
+        </div>
+      </div>
+
+      <BottomNav active="historico" />
+    </div>
+  );
+};
 
 // --- T12 · PERFIL ---
 export const Profile = () => (
