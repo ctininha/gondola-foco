@@ -88,7 +88,7 @@ export const Dashboard = () => {
   ]);
 
   return (
-    <div className="screen" style={{ paddingBottom: "100px" }}>
+    <div className="screen" style={{ paddingBottom: "140px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
         <div>
           <h2 style={{ fontSize: "22px", fontWeight: "800", color: "#0F172A" }}>Olá, Ana</h2>
@@ -107,7 +107,7 @@ export const Dashboard = () => {
 
       <h3 style={{ fontSize: "15px", fontWeight: "700", color: "#0F172A", marginBottom: "12px" }}>Corredores</h3>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "70px" }}>
         {corredores.map((c) => (
           <Link key={c.id} href={c.rota} style={{ textDecoration: "none" }}>
             <div style={{ padding: "14px 16px", backgroundColor: c.destaque ? "#F8FAFC" : "#FFFFFF", border: c.destaque ? "2px solid #1366E5" : "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
@@ -121,7 +121,8 @@ export const Dashboard = () => {
         ))}
       </div>
 
-      <div style={{ position: "fixed", bottom: "75px", left: "20px", right: "20px", maxWidth: "390px", margin: "0 auto", zIndex: 40 }}>
+      {/* Botão Fixo Nova Auditoria */}
+      <div style={{ position: "fixed", bottom: "72px", left: "0", right: "0", maxWidth: "430px", margin: "0 auto", padding: "0 20px", zIndex: 45 }}>
         <Link href="/analyses/new" style={{ textDecoration: "none" }}>
           <button className="btn-primary" style={{ boxShadow: "0 10px 25px rgba(19, 102, 229, 0.3)" }}>
             📷 Nova auditoria
@@ -428,7 +429,7 @@ export const History = () => (
     <div style={{ backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "16px", padding: "16px", marginBottom: "20px" }}>
       <div style={{ fontSize: "12px", color: "#64748B", fontWeight: "600", marginBottom: "2px" }}>Nota média da semana</div>
       <div style={{ fontSize: "28px", fontWeight: "800", color: "#0F172A", marginBottom: "12px" }}>93</div>
-      <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "10px", height: "80px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "12px" }}>
+      <div style={{ backgroundColor: "#FFFFFF", border: "1.5px solid #E2E8F0", borderRadius: "10px", height: "80px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "12px" }}>
         [ Gráfico de evolução diária ]
       </div>
     </div>
@@ -472,7 +473,7 @@ export const Profile = () => (
 
 // --- BARRA DE NAVEGAÇÃO INFERIOR ---
 const BottomNav = ({ active }) => (
-  <div className="bottom-nav">
+  <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: "430px", background: "white", borderTop: "1px solid var(--border)", display: "flex", justifyContent: "space-around", padding: "10px 0 14px", zIndex: 50 }}>
     <Link href="/dashboard" style={{ textDecoration: "none" }}>
       <button className={`nav-item ${active === 'inicio' ? 'active' : ''}`}>
         <span>🏠</span>
