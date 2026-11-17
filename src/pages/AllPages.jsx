@@ -397,4 +397,101 @@ export const AnalysisSuccess = () => (
     <h2 style={{ fontSize: "22px", fontWeight: "800", color: "#0F172A", marginBottom: "4px" }}>Corredor 4 concluído</h2>
     <p style={{ fontSize: "13px", color: "#64748B", marginBottom: "24px" }}>Módulo B · 3 de 3 ocorrências resolvidas</p>
 
-    <div style={{ width: "100
+    <div style={{ width: "100%", backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "16px", padding: "16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "32px" }}>
+      <div>
+        <div style={{ fontSize: "18px", fontWeight: "800", color: "#0F172A" }}>94</div>
+        <div style={{ fontSize: "11px", color: "#64748B" }}>nota atual</div>
+      </div>
+      <div>
+        <div style={{ fontSize: "18px", fontWeight: "800", color: "#16A34A" }}>3</div>
+        <div style={{ fontSize: "11px", color: "#64748B" }}>resolvidas</div>
+      </div>
+      <div>
+        <div style={{ fontSize: "18px", fontWeight: "800", color: "#1366E5" }}>12 min</div>
+        <div style={{ fontSize: "11px", color: "#64748B" }}>de trabalho</div>
+      </div>
+    </div>
+
+    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
+      <Link href="/dashboard" style={{ textDecoration: "none" }}>
+        <button className="btn-primary">Voltar ao início</button>
+      </Link>
+    </div>
+  </div>
+);
+
+// --- T11 · HISTÓRICO ---
+export const History = () => (
+  <div className="screen" style={{ paddingBottom: "100px" }}>
+    <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#0F172A", marginBottom: "16px" }}>Histórico</h2>
+
+    <div style={{ backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "16px", padding: "16px", marginBottom: "20px" }}>
+      <div style={{ fontSize: "12px", color: "#64748B", fontWeight: "600", marginBottom: "2px" }}>Nota média da semana</div>
+      <div style={{ fontSize: "28px", fontWeight: "800", color: "#0F172A", marginBottom: "12px" }}>93</div>
+      <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "10px", height: "80px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "12px" }}>
+        [ Gráfico de evolução diária ]
+      </div>
+    </div>
+
+    <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "10px" }}>Hoje</h3>
+    <div style={{ padding: "14px", backgroundColor: "white", border: "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+      <div>
+        <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A" }}>Corredor 4 · Módulo B</div>
+        <div style={{ fontSize: "12px", color: "#64748B" }}>14:32 · 3 ocorrências</div>
+      </div>
+      <span className="badge badge-success">94</span>
+    </div>
+
+    <BottomNav active="historico" />
+  </div>
+);
+
+// --- T12 · PERFIL ---
+export const Profile = () => (
+  <div className="screen" style={{ paddingBottom: "100px", alignItems: "center", textAlign: "center" }}>
+    <div style={{ width: "72px", height: "72px", backgroundColor: "#EBF3FE", color: "#1366E5", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "24px", margin: "16px auto 12px" }}>A</div>
+    <h2 style={{ fontSize: "18px", fontWeight: "800", color: "#0F172A" }}>Ana · Repositora</h2>
+    <p style={{ fontSize: "12px", color: "#64748B", marginBottom: "24px" }}>Mercado Bom Preço · turno da manhã</p>
+
+    <div style={{ width: "100%", backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "14px", padding: "14px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+      <span style={{ fontSize: "13px", fontWeight: "600", color: "#334155" }}>Fila de envio</span>
+      <span className="badge badge-success">0 pendentes</span>
+    </div>
+
+    <div style={{ width: "100%", marginTop: "20px" }}>
+      <Link href="/" style={{ textDecoration: "none", width: "100%" }}>
+        <button style={{ width: "100%", minHeight: "50px", backgroundColor: "white", color: "#DC2626", border: "1.5px solid #DC2626", borderRadius: "14px", fontSize: "15px", fontWeight: "600", cursor: "pointer" }}>
+          Sair
+        </button>
+      </Link>
+    </div>
+
+    <BottomNav active="perfil" />
+  </div>
+);
+
+// --- BARRA DE NAVEGAÇÃO INFERIOR ---
+const BottomNav = ({ active }) => (
+  <div className="bottom-nav">
+    <Link href="/dashboard" style={{ textDecoration: "none" }}>
+      <button className={`nav-item ${active === 'inicio' ? 'active' : ''}`}>
+        <span>🏠</span>
+        <span>Início</span>
+      </button>
+    </Link>
+    <Link href="/history" style={{ textDecoration: "none" }}>
+      <button className={`nav-item ${active === 'historico' ? 'active' : ''}`}>
+        <span>📊</span>
+        <span>Histórico</span>
+      </button>
+    </Link>
+    <Link href="/profile" style={{ textDecoration: "none" }}>
+      <button className={`nav-item ${active === 'perfil' ? 'active' : ''}`}>
+        <span>👤</span>
+        <span>Perfil</span>
+      </button>
+    </Link>
+  </div>
+);
+
+export const NotFound = () => <div className="screen"><h2>404 - Página não encontrada</h2><Link href="/">Início</Link></div>;
