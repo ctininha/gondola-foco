@@ -69,6 +69,14 @@ export const Login = () => {
 
 // --- T02 · INÍCIO (DASHBOARD) ---
 export const Dashboard = () => {
+  const [, setLocation] = useLocation();
+
+  // Força passar pelo login se não estiver autenticado
+  if (!localStorage.getItem("logado")) { 
+    setLocation("/"); 
+    return null; 
+  }
+
   const [corredores] = useState([
     { id: 1, nome: "Corredor 1 · Mercearia", status: "Concluído", info: "Auditado às 08:12 · nota 98", badgeClass: "badge-success", rota: "/dashboard" },
     { id: 2, nome: "Corredor 2 · Bebidas", status: "Concluído", info: "Auditado às 09:03 · nota 100", badgeClass: "badge-success", rota: "/dashboard" },
