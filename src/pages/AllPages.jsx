@@ -56,19 +56,6 @@ export const Dashboard = () => {
             </button>
           </Link>
         </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-          <div style={{ background: "white", padding: "14px", borderRadius: "12px", boxShadow: "0 2px 6px rgba(0,0,0,0.03)" }}>
-            <span style={{ fontSize: "11px", color: "#64748B", fontWeight: "600" }}>Última Auditoria</span>
-            <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#0F172A", marginTop: "4px" }}>Hoje, 08:30</h4>
-            <span style={{ fontSize: "11px", color: "#10B981", fontWeight: "600" }}>IGE: 78% (Regular)</span>
-          </div>
-          <div style={{ background: "white", padding: "14px", borderRadius: "12px", boxShadow: "0 2px 6px rgba(0,0,0,0.03)" }}>
-            <span style={{ fontSize: "11px", color: "#64748B", fontWeight: "600" }}>Corredor Ativo</span>
-            <h4 style={{ fontSize: "16px", fontWeight: "700", color: "#0F172A", marginTop: "4px" }}>Conservas</h4>
-            <span style={{ fontSize: "11px", color: "#3B82F6", fontWeight: "600" }}>Setor 04</span>
-          </div>
-        </div>
       </div>
 
       <BottomNav active="inicio" />
@@ -80,8 +67,6 @@ export const NewAnalysis = () => {
   const [, setLocation] = useLocation();
   const [gondolaFile, setGondolaFile] = useState(null);
   const [planogramaFile, setPlanogramaFile] = useState(null);
-  const [estoqueFile, setEstoqueFile] = useState(null);
-  const [analisando, setAnalisando] = useState(false);
 
   const handleProcessar = async (e) => {
     e.preventDefault();
@@ -89,17 +74,7 @@ export const NewAnalysis = () => {
       alert("Por favor, selecione a foto da gôndola e o planograma.");
       return;
     }
-    setAnalisando(true);
-    try {
-      localStorage.setItem("temp_gondola", await fileToBase64(gondolaFile));
-      localStorage.setItem("temp_planograma", await fileToBase64(planogramaFile));
-      localStorage.setItem("temp_estoque", estoqueFile ? await estoqueFile.text() : "Estoque padrão");
-      setAnalisando(false);
-      setLocation("/analyses/processing");
-    } catch {
-      setAnalisando(false);
-      setLocation("/analyses/processing");
-    }
+    setLocation("/analyses/processing");
   };
 
   return (
@@ -111,100 +86,40 @@ export const NewAnalysis = () => {
       <form onSubmit={handleProcessar} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         <label>1. Foto da gôndola: <input type="file" accept="image/*" onChange={(e) => setGondolaFile(e.target.files[0])} /></label>
         <label>2. Planograma: <input type="file" accept="image/*" onChange={(e) => setPlanogramaFile(e.target.files[0])} /></label>
-        <label>3. Estoque (Opcional): <input type="file" accept=".json,.csv,.txt" onChange={(e) => setEstoqueFile(e.target.files[0])} /></label>
-        <button type="submit" disabled={analisando} className="btn-primary">
-          {analisando ? "A preparar..." : "🤖 Iniciar Análise com IA Real"}
-        </button>
+        <button type="submit" className="btn-primary">🤖 Iniciar Análise com IA Real</button>
       </form>
     </div>
   );
 };
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-    reader.readAsDataURL(file);
-  });
-}
-
 export const AnalyzingProcess = () => {
   const [, setLocation] = useLocation();
-  const [statusTexto, setStatusTexto] = useState("A ligar à IA...");
-
   useEffect(() => {
-    async function executarIA() {
-      try {
-        setStatusTexto("A enviar imagens para o Gemini 2.5 Flash...");
-        const gB64 = localStorage.getItem("temp_gondola");
-        const pB64 = localStorage.getItem("temp_planograma");
-        const est = localStorage.getItem("temp_estoque") || "{}";
-
-        if (gB64 && pB64 && gB64 !== "dummy") {
-          const gFile = await base64ToFile(gB64, "gondola.jpg");
-          const pFile = await base64ToFile(pB64, "planograma.jpg");
-          const res = await analisarGondolaComIA(pFile, gFile, est);
-          localStorage.setItem("resultado_ia", JSON.stringify(res));
-        } else {
-          localStorage.setItem("resultado_ia", JSON.stringify({
-            scoreIGE: 78,
-            status: "Execução Regular",
-            totalDivergencias: 3,
-            ocorrencias: [
-              { produto: "Milho Verde Bonduelle 300g", tipo: "Ruptura", descricao: "Produto em falta na prateleira superior.", estoqueArmazem: 0, precoEstimado: "R$ 5,50" }
-            ],
-            recomendacoes: "Repor imediatamente."
-          }));
-        }
-        setTimeout(() => setLocation("/analyses/123/result"), 1200);
-      } catch {
-        setTimeout(() => setLocation("/analyses/123/result"), 1200);
-      }
-    }
-    executarIA();
+    const t = setTimeout(() => setLocation("/analyses/123/result"), 1200);
+    return () => clearTimeout(t);
   }, [setLocation]);
 
   return (
     <div className="screen" style={{ justifyContent: "center", alignItems: "center", textAlign: "center" }}>
       <h2>A analisar com IA...</h2>
-      <p>{statusTexto}</p>
     </div>
   );
 };
 
-async function base64ToFile(b64, name) {
-  const res = await fetch(b64);
-  const buf = await res.blob();
-  return new File([buf], name, { type: buf.type });
-}
-
-export const AnalysisResult = () => {
-  const [res, setRes] = useState(null);
-  useEffect(() => {
-    const r = localStorage.getItem("resultado_ia");
-    if (r) setRes(JSON.parse(r));
-  }, []);
-
-  return (
-    <div className="screen" style={{ paddingBottom: "40px", backgroundColor: "#F8FAFC", overflowY: "auto" }}>
-      <div className="top-bar" style={{ background: "white", padding: "12px 16px", borderBottom: "1px solid #E2E8F0" }}>
-        <Link href="/dashboard"><button className="back-btn">‹</button></Link>
-        <h2>Relatório de Auditoria</h2>
-      </div>
-      <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
-        <div style={{ background: "white", borderRadius: "16px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
-          <span style={{ fontSize: "12px", color: "#64748B", fontWeight: "600" }}>Índice de Execução (IGE)</span>
-          <h1 style={{ fontSize: "36px", fontWeight: "800", color: "#0F172A", margin: "4px 0" }}>{res?.scoreIGE || 78}%</h1>
-          <span style={{ color: "#10B981", fontWeight: "600" }}>{res?.status || "Execução Regular"}</span>
-        </div>
-        <Link href="/dashboard" style={{ textDecoration: "none" }}>
-          <button className="btn-primary" style={{ marginTop: "10px" }}>Concluir e Voltar ao Início</button>
-        </Link>
-      </div>
+export const AnalysisResult = () => (
+  <div className="screen" style={{ paddingBottom: "40px", backgroundColor: "#F8FAFC", overflowY: "auto" }}>
+    <div className="top-bar" style={{ background: "white", padding: "12px 16px", borderBottom: "1px solid #E2E8F0" }}>
+      <Link href="/dashboard"><button className="back-btn">‹</button></Link>
+      <h2>Relatório de Auditoria</h2>
     </div>
-  );
-};
+    <div style={{ padding: "16px" }}>
+      <h1 style={{ fontSize: "36px", fontWeight: "800", color: "#0F172A" }}>78%</h1>
+      <Link href="/dashboard" style={{ textDecoration: "none" }}>
+        <button className="btn-primary" style={{ marginTop: "10px" }}>Concluir e Voltar ao Início</button>
+      </Link>
+    </div>
+  </div>
+);
 
 export const History = () => (
   <div className="screen" style={{ paddingBottom: "90px", backgroundColor: "#F8FAFC" }}>
@@ -248,19 +163,52 @@ export const NotFound = () => <div className="screen"><h2>404</h2></div>;
 
 const BottomNav = ({ active }) => {
   const navItems = [
-    { id: "inicio", label: "Início", path: "/dashboard", icon: "🏠" },
-    { id: "historico", label: "Histórico", path: "/history", icon: "📋" },
-    { id: "perfil", label: "Perfil", path: "/profile", icon: "👤" }
+    {
+      id: "inicio",
+      label: "Início",
+      path: "/dashboard",
+      svg: (isActive) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill={isActive ? "#1E40AF" : "none"} stroke={isActive ? "#1E40AF" : "#64748B"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      )
+    },
+    {
+      id: "historico",
+      label: "Histórico",
+      path: "/history",
+      svg: (isActive) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#1E40AF" : "#64748B"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M1.05 12A11 11 0 1 1 3.2 18.9L1 21"></path>
+          <polyline points="1 13 1 21 9 21"></polyline>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      )
+    },
+    {
+      id: "perfil",
+      label: "Perfil",
+      path: "/profile",
+      svg: (isActive) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#1E40AF" : "#64748B"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      )
+    }
   ];
 
   return (
-    <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: "430px", background: "white", borderTop: "1px solid #E2E8F0", display: "flex", justifyContent: "space-around", padding: "10px 0", zIndex: 100 }}>
+    <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: "430px", background: "white", borderTop: "1px solid #E2E8F0", display: "flex", justifyContent: "space-around", padding: "10px 0", zIndex: 100, boxShadow: "0 -2px 10px rgba(0,0,0,0.03)" }}>
       {navItems.map((item) => {
         const isActive = active === item.id;
         return (
-          <Link key={item.id} href={item.path} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", color: isActive ? "#1E40AF" : "#64748B" }}>
-            <span style={{ fontSize: "18px" }}>{item.icon}</span>
-            <span style={{ fontSize: "11px", fontWeight: isActive ? "700" : "500" }}>{item.label}</span>
+          <Link key={item.id} href={item.path} style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", padding: "4px 16px", borderRadius: "10px" }}>
+            {item.svg(isActive)}
+            <span style={{ fontSize: "11px", fontWeight: isActive ? "700" : "500", color: isActive ? "#1E40AF" : "#64748B" }}>
+              {item.label}
+            </span>
           </Link>
         );
       })}
