@@ -1,40 +1,66 @@
-import { useState } from "react";
-import { Switch, Route, Link } from "wouter";
-import { OCORRENCIAS_EXEMPLO } from "./data/mockData";
-import { Login, Dashboard, NewAnalysis, GuidedCamera, ReviewPhoto, AnalyzingProcess } from "./pages/CaptureFlow";
-import { AnalysisResult, OccurrencesList, OccurrenceDetail, AnalysisSuccess, History, Profile } from "./pages/ResultAndProfile";
+import { Switch, Route } from "wouter";
 
-function NotFound() {
+// Importação dos componentes das 12 telas
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import NewAnalysis from "./pages/NewAnalysis";
+import GuidedCamera from "./pages/GuidedCamera";
+import ReviewPhoto from "./pages/ReviewPhoto";
+import AnalyzingProcess from "./pages/AnalyzingProcess";
+import AnalysisResult from "./pages/AnalysisResult";
+import OccurrencesList from "./pages/OccurrencesList";
+import OccurrenceDetail from "./pages/OccurrenceDetail";
+import AnalysisSuccess from "./pages/AnalysisSuccess";
+import History from "./pages/History";
+import Profile from "./pages/Profile";
+import NotFound from "./pages/NotFound";
+
+function Router() {
   return (
-    <div className="screen-no-nav" style={{ textAlign: "center", justifyContent: "center" }}>
-      <h2>404 - Página não encontrada</h2>
-      <Link href="/" style={{ color: "var(--primary)", marginTop: "12px" }}>Voltar ao Início</Link>
-    </div>
+    <Layout>
+      <Switch>
+        {/* T01 - Autenticação / Entrar (Agora é a tela inicial do app) */}
+        <Route path="/" component={Login} />
+        <Route path="/login" component={Login} />
+
+        {/* T02 - Início / Dashboard principal do funcionário */}
+        <Route path="/dashboard" component={Dashboard} />
+
+        {/* T03 - Nova Auditoria (Escolher corredor e gôndola) */}
+        <Route path="/analyses/new" component={NewAnalysis} />
+
+        {/* T04 - Câmera Guiada */}
+        <Route path="/analyses/camera" component={GuidedCamera} />
+
+        {/* T05 - Revisar Foto */}
+        <Route path="/analyses/review" component={ReviewPhoto} />
+
+        {/* T06 - Analisando (Processamento IA) */}
+        <Route path="/analyses/processing" component={AnalyzingProcess} />
+
+        {/* T07 - Resultado (Nota e Indicadores gerais) */}
+        <Route path="/analyses/:id/result" component={AnalysisResult} />
+
+        {/* T08 - Ocorrências (Listar o que corrigir) */}
+        <Route path="/analyses/:id/occurrences" component={OccurrencesList} />
+
+        {/* T09 - Detalhe da Ocorrência (Esperado x Encontrado / Preço divergente) */}
+        <Route path="/analyses/occurrences/:occurrenceId" component={OccurrenceDetail} />
+
+        {/* T10 - Conclusão (Corredor concluído) */}
+        <Route path="/analyses/:id/success" component={AnalysisSuccess} />
+
+        {/* T11 - Histórico (Consultar auditorias anteriores) */}
+        <Route path="/history" component={History} />
+
+        {/* T12 - Perfil (Conta, fila de envio, LGPD, preferências) */}
+        <Route path="/profile" component={Profile} />
+
+        {/* Rota padrão para páginas não encontradas */}
+        <Route component={NotFound} />
+      </Switch>
+    </Layout>
   );
 }
 
-export default function Router() {
-  const [ocorrencias, setOcorrencias] = useState(OCORRENCIAS_EXEMPLO);
-
-  return (
-    <Switch>
-      <Route path="/login" component={Login} />
-      <Route path="/" component={Dashboard} />
-      <Route path="/analyses/new" component={NewAnalysis} />
-      <Route path="/analyses/camera" component={GuidedCamera} />
-      <Route path="/analyses/review" component={ReviewPhoto} />
-      <Route path="/analyses/processing" component={AnalyzingProcess} />
-      <Route path="/analyses/:id/result" component={AnalysisResult} />
-      <Route path="/analyses/:id/occurrences">
-        {() => <OccurrencesList ocorrencias={ocorrencias} setOcorrencias={setOcorrencias} />}
-      </Route>
-      <Route path="/analyses/occurrences/:occurrenceId">
-        {() => <OccurrenceDetail ocorrencias={ocorrencias} setOcorrencias={setOcorrencias} />}
-      </Route>
-      <Route path="/analyses/:id/success" component={AnalysisSuccess} />
-      <Route path="/history" component={History} />
-      <Route path="/profile" component={Profile} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
+export default Router;
