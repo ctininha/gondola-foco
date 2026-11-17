@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { analisarGondolaComIA } from "../services/aiAuditor";
 
 // --- T01 · ENTRAR (LOGIN FAKE) ---
 export const Login = () => {
@@ -20,7 +21,7 @@ export const Login = () => {
     setCarregando(true);
     setTimeout(() => {
       setCarregando(false);
-      localStorage.setItem("logado", "true"); // Guarda a sessão no navegador
+      localStorage.setItem("logado", "true");
       setLocation("/dashboard");
     }, 600);
   };
@@ -72,7 +73,6 @@ export const Login = () => {
 export const Dashboard = () => {
   const [, setLocation] = useLocation();
 
-  // Segurança: se não estiver logado, redireciona para o login na raiz
   if (!localStorage.getItem("logado")) {
     setLocation("/");
     return null;
@@ -133,7 +133,7 @@ export const Dashboard = () => {
   );
 };
 
-// --- T03 · NOVA AUDITORIA ---
+// --- T03 · NOVA AUDITORIA (COM CAPTURA PARA IA) ---
 export const NewAnalysis = () => {
   const [, setLocation] = useLocation();
   const [gondolaFile, setGondolaFile] = useState(null);
@@ -141,13 +141,33 @@ export const NewAnalysis = () => {
   const [estoqueFile, setEstoqueFile] = useState(null);
   const [analisando, setAnalisando] = useState(false);
 
-  const handleProcessar = (e) => {
+  const handleProcessar = async (e) => {
     e.preventDefault();
+    if (!gondolaFile || !planogramaFile) {
+      alert("Por favor, carregue pelo menos a foto da gôndola e o planograma.");
+      return;
+    }
+
     setAnalisando(true);
-    setTimeout(() => {
+
+    try {
+      const gondolaB64 = await fileToGenerativePart(gondolaFile);
+      const planogramaB64 = await fileToGenerativePart(planogramaFile);
+
+      localStorage.setItem("temp_gondola", gondolaB64);
+      localStorage.setItem("temp_planograma", planogramaB64);
+      if (estoqueFile) {
+        const estoqueTexto = await estoqueFile.text();
+        localStorage.setItem("temp_estoque", estoqueTexto);
+      }
+
       setAnalisando(false);
       setLocation("/analyses/processing");
-    }, 1000);
+    } catch (err) {
+      console.error("Erro ao processar ficheiros:", err);
+      setAnalisando(false);
+      alert("Erro ao ler os ficheiros enviados.");
+    }
   };
 
   return (
@@ -157,7 +177,7 @@ export const NewAnalysis = () => {
         <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Nova auditoria</h2>
       </div>
 
-      <div style={{ fontSize: "11px", fontWeight: "700", color: "#1366E5", textTransform: "uppercase", marginBottom: "4px" }}>Passo 1 de 2 · TCC</div>
+      <div style={{ fontSize: "11px", fontWeight: "700", color: "#1366E5", textTransform: "uppercase", marginBottom: "4px" }}>Passo 1 de 2 · TCC IA</div>
       <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#0F172A", marginBottom: "16px" }}>Carregar Fotos e Base Local</h3>
 
       <form onSubmit={handleProcessar} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -180,12 +200,21 @@ export const NewAnalysis = () => {
         </div>
 
         <button type="submit" disabled={analisando} className="btn-primary" style={{ marginTop: "6px" }}>
-          {analisando ? "A preparar..." : "📸 Avançar para câmara / revisão"}
+          {analisando ? "A preparar ficheiros..." : "🤖 Iniciar Análise com IA Real"}
         </button>
       </form>
     </div>
   );
 };
+
+function fileToGenerativePart(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 // --- T04 · CÂMERA GUIADA ---
 export const GuidedCamera = () => (
@@ -246,88 +275,157 @@ export const ReviewPhoto = () => (
   </div>
 );
 
-// --- T06 · ANALISANDO ---
-export const AnalyzingProcess = () => (
-  <div className="screen" style={{ justifyContent: "center", alignItems: "center", textAlign: "center" }}>
-    <div style={{ width: "100px", height: "100px", borderRadius: "50%", border: "6px solid #E2E8F0", borderTopColor: "#1366E5", margin: "0 auto 20px" }}></div>
-    
-    <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#0F172A", marginBottom: "8px" }}>Analisando gôndola e cruzando estoque</h2>
-    <p style={{ fontSize: "13px", color: "#64748B", marginBottom: "24px" }}>A processar IA e ficheiro local...</p>
+// --- T06 · ANALISANDO (CHAMADA REAL AO GEMINI) ---
+export const AnalyzingProcess = () => {
+  const [, setLocation] = useLocation();
+  const [statusTexto, setStatusTexto] = useState("A conectar à IA Multimodal...");
 
-    <div style={{ width: "100%", textAlign: "left", backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#16A34A", fontWeight: "600" }}>✓ Fotos carregadas</div>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#1366E5", fontWeight: "700" }}>⏳ Comparando com o planograma</div>
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#1366E5", fontWeight: "700" }}>⏳ Cruzando preços com arquivo local</div>
+  useEffect(() => {
+    async function executarAnaliseReal() {
+      try {
+        setStatusTexto("A enviar imagens para o Gemini 2.5 Flash...");
+        const gondolaB64 = localStorage.getItem("temp_gondola");
+        const planogramaB64 = localStorage.getItem("temp_planograma");
+        const estoqueDados = localStorage.getItem("temp_estoque") || "Sem estoque carregado";
+
+        if (gondolaB64 && planogramaB64) {
+          const gondolaFile = await base64ToFile(gondolaB64, "gondola.jpg");
+          const planogramaFile = await base64ToFile(planogramaB64, "planograma.jpg");
+
+          setStatusTexto("IA a comparar planograma com gôndola real...");
+          const resultadoIA = await analisarGondolaComIA(planogramaFile, gondolaFile, estoqueDados);
+          
+          localStorage.setItem("resultado_ia", JSON.stringify(resultadoIA));
+        }
+
+        setStatusTexto("Análise concluída com sucesso!");
+        setTimeout(() => {
+          setLocation("/analyses/123/result");
+        }, 1000);
+      } catch (err) {
+        console.error("Erro na execução da IA:", err);
+        setStatusTexto("Erro ao processar. A carregar relatório padrão...");
+        setTimeout(() => setLocation("/analyses/123/result"), 1500);
+      }
+    }
+
+    executarAnaliseReal();
+  }, [setLocation]);
+
+  return (
+    <div className="screen" style={{ justifyContent: "center", alignItems: "center", textAlign: "center" }}>
+      <div style={{ width: "100px", height: "100px", borderRadius: "50%", border: "6px solid #E2E8F0", borderTopColor: "#1366E5", margin: "0 auto 20px", animation: "spin 1s linear infinite" }}></div>
+      
+      <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#0F172A", marginBottom: "8px" }}>Processamento Visual Ativo</h2>
+      <p style={{ fontSize: "13px", color: "#64748B", marginBottom: "24px" }}>{statusTexto}</p>
+
+      <div style={{ width: "100%", textAlign: "left", backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", marginBottom: "24px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#16A34A", fontWeight: "600" }}>✓ Ficheiros validados</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#1366E5", fontWeight: "700" }}>⏳ Visão Computacional Gemini em execução</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "#1366E5", fontWeight: "700" }}>⏳ Cruzamento com base local ERP</div>
+      </div>
     </div>
+  );
+};
 
-    <Link href="/analyses/123/result" style={{ width: "100%", textDecoration: "none" }}>
-      <button className="btn-primary">Ver Relatório de Divergências</button>
-    </Link>
-  </div>
-);
+async function base64ToFile(base64String, filename) {
+  const res = await fetch(base64String);
+  const buf = await res.blob();
+  return new File([buf], filename, { type: buf.type });
+}
 
 // --- T07 · RESULTADO ---
-export const AnalysisResult = () => (
-  <div className="screen" style={{ paddingBottom: "100px" }}>
-    <div className="top-bar">
-      <Link href="/dashboard"><button className="back-btn">‹</button></Link>
-      <div>
-        <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Resultado da Análise</h2>
-        <p style={{ fontSize: "11px", color: "#64748B" }}>Corredor 4 · Cruzado com base local</p>
-      </div>
-    </div>
+export const AnalysisResult = () => {
+  const [resultado, setResultado] = useState(null);
 
-    <div style={{ backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "16px", padding: "18px", textAlign: "center", marginBottom: "16px" }}>
-      <div style={{ width: "90px", height: "90px", borderRadius: "50%", border: "6px solid #16A34A", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", margin: "0 auto 8px" }}>
-        <span style={{ fontSize: "28px", fontWeight: "800", color: "#0F172A", lineHeight: "1" }}>88</span>
-        <span style={{ fontSize: "10px", color: "#64748B", fontWeight: "600" }}>IGE</span>
-      </div>
-      <div style={{ fontSize: "14px", fontWeight: "800", color: "#0F172A" }}>Execução Regular · 2 Divergências</div>
-    </div>
+  useEffect(() => {
+    const resGuardado = localStorage.getItem("resultado_ia");
+    if (resGuardado) {
+      try {
+        setResultado(JSON.parse(resGuardado));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
 
-    <Link href="/analyses/occurrences/1" style={{ textDecoration: "none" }}>
-      <button className="btn-primary">Ver Ocorrências Detalhadas e Estoque</button>
-    </Link>
-  </div>
-);
+  const score = resultado?.scoreIGE || 88;
+  const statusStr = resultado?.status || "Execução Regular";
+  const totalDiv = resultado?.totalDivergencias || 2;
+
+  return (
+    <div className="screen" style={{ paddingBottom: "100px" }}>
+      <div className="top-bar">
+        <Link href="/dashboard"><button className="back-btn">‹</button></Link>
+        <div>
+          <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Resultado da Análise</h2>
+          <p style={{ fontSize: "11px", color: "#64748B" }}>Processado por IA Multimodal</p>
+        </div>
+      </div>
+
+      <div style={{ backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "16px", padding: "18px", textAlign: "center", marginBottom: "16px" }}>
+        <div style={{ width: "90px", height: "90px", borderRadius: "50%", border: "6px solid #16A34A", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", margin: "0 auto 8px" }}>
+          <span style={{ fontSize: "28px", fontWeight: "800", color: "#0F172A", lineHeight: "1" }}>{score}</span>
+          <span style={{ fontSize: "10px", color: "#64748B", fontWeight: "600" }}>IGE</span>
+        </div>
+        <div style={{ fontSize: "14px", fontWeight: "800", color: "#0F172A" }}>{statusStr} · {totalDiv} Divergências</div>
+      </div>
+
+      <Link href="/analyses/occurrences/1" style={{ textDecoration: "none" }}>
+        <button className="btn-primary">Ver Ocorrências Detalhadas e Estoque</button>
+      </Link>
+    </div>
+  );
+};
 
 // --- T08 · OCORRÊNCIAS ---
-export const OccurrencesList = () => (
-  <div className="screen" style={{ paddingBottom: "100px" }}>
-    <div className="top-bar">
-      <Link href="/analyses/123/result"><button className="back-btn">‹</button></Link>
-      <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Ocorrências</h2>
-    </div>
+export const OccurrencesList = () => {
+  const [resultado, setResultado] = useState(null);
 
-    <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
-      <Link href="/analyses/occurrences/detail" style={{ textDecoration: "none" }}>
-        <div style={{ padding: "14px", backgroundColor: "white", border: "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "2px" }}>Leite Integral 1L</div>
-            <div style={{ fontSize: "12px", color: "#166534", marginBottom: "4px" }}>📦 Estoque: 12 un no armazém (Repor)</div>
-            <span className="badge badge-danger">Ruptura</span>
-          </div>
-          <span style={{ fontSize: "18px", color: "#94A3B8" }}>›</span>
-        </div>
+  useEffect(() => {
+    const resGuardado = localStorage.getItem("resultado_ia");
+    if (resGuardado) {
+      try {
+        setResultado(JSON.parse(resGuardado));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
+
+  const ocorrencias = resultado?.ocorrencias || [
+    { produto: "Leite Integral 1L", tipo: "Ruptura", descricao: "Estoque: 12 un no armazém (Repor)" },
+    { produto: "Achocolatado 400g", tipo: "Preço Divergente", descricao: "Etiqueta R$ 7,49 | Sistema R$ 7,99" }
+  ];
+
+  return (
+    <div className="screen" style={{ paddingBottom: "100px" }}>
+      <div className="top-bar">
+        <Link href="/analyses/123/result"><button className="back-btn">‹</button></Link>
+        <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Ocorrências (IA)</h2>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
+        {ocorrencias.map((occ, idx) => (
+          <Link key={idx} href="/analyses/occurrences/detail" style={{ textDecoration: "none" }}>
+            <div style={{ padding: "14px", backgroundColor: "white", border: "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "2px" }}>{occ.produto}</div>
+                <div style={{ fontSize: "12px", color: "#64748B", marginBottom: "4px" }}>{occ.descricao}</div>
+                <span className={`badge ${occ.tipo === 'Ruptura' ? 'badge-danger' : 'badge-warning'}`}>{occ.tipo}</span>
+              </div>
+              <span style={{ fontSize: "18px", color: "#94A3B8" }}>›</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <Link href="/analyses/123/success" style={{ textDecoration: "none" }}>
+        <button className="btn-primary">Concluir tratativa</button>
       </Link>
-
-      <Link href="/analyses/occurrences/detail" style={{ textDecoration: "none" }}>
-        <div style={{ padding: "14px", backgroundColor: "white", border: "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "2px" }}>Achocolatado 400g</div>
-            <div style={{ fontSize: "12px", color: "#B45309", marginBottom: "4px" }}>⚠️ Etiqueta R$ 7,49 | Sistema R$ 7,99</div>
-            <span className="badge badge-warning">Preço Divergente</span>
-          </div>
-          <span style={{ fontSize: "18px", color: "#94A3B8" }}>›</span>
-        </div>
-      </Link>
     </div>
-
-    <Link href="/analyses/123/success" style={{ textDecoration: "none" }}>
-      <button className="btn-primary">Concluir tratativa</button>
-    </Link>
-  </div>
-);
+  );
+};
 
 // --- T09 · DETALHE DA OCORRÊNCIA ---
 export const OccurrenceDetail = () => (
@@ -368,7 +466,7 @@ export const AnalysisSuccess = () => (
       ✓
     </div>
 
-    <h2 style={{ fontSize: "22px", fontWeight: "800", color: "#0F172A", marginBottom: "4px" }}>Corredor 4 Concluído</h2>
+    <h2 style={{ fontSize: "22px", fontWeight: "800", color: "#0F172A", marginBottom: "4px" }}>Auditoria Concluída</h2>
     <p style={{ fontSize: "13px", color: "#64748B", marginBottom: "24px" }}>Ocorrências tratadas e reportadas com sucesso!</p>
 
     <Link href="/dashboard" style={{ textDecoration: "none", width: "100%" }}>
@@ -377,7 +475,7 @@ export const AnalysisSuccess = () => (
   </div>
 );
 
-// --- T11 · HISTÓRICO / DASHBOARD GERENCIAL ---
+// --- T11 · HISTÓRICO ---
 export const History = () => (
   <div className="screen" style={{ paddingBottom: "100px" }}>
     <h2 style={{ fontSize: "20px", fontWeight: "800", color: "#0F172A", marginBottom: "4px" }}>Dashboard Gerencial</h2>
@@ -389,13 +487,13 @@ export const History = () => (
       <div style={{ fontSize: "11px", color: "#16A34A", fontWeight: "700" }}>✓ Sem rupturas críticas hoje</div>
     </div>
 
-    <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "10px" }}>Auditorias Hoje</h3>
+    <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A", marginBottom: "10px" }}>Auditorias Recentes</h3>
     
     <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
       <div style={{ padding: "14px", backgroundColor: "white", border: "1.5px solid #E2E8F0", borderRadius: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A" }}>Corredor 4 · Laticínios</div>
-          <div style={{ fontSize: "12px", color: "#64748B" }}>14:32 · 2 divergências tratadas</div>
+          <div style={{ fontSize: "14px", fontWeight: "700", color: "#0F172A" }}>Corredor 4 · IA Análise</div>
+          <div style={{ fontSize: "12px", color: "#64748B" }}>Processado via Gemini Multimodal</div>
         </div>
         <span className="badge badge-success">88</span>
       </div>
@@ -418,7 +516,7 @@ export const Profile = () => {
       <div style={{ width: "100%", marginTop: "20px" }}>
         <button 
           onClick={() => { 
-            localStorage.removeItem("logado"); // Limpa a sessão ao sair
+            localStorage.removeItem("logado"); 
             setLocation("/"); 
           }} 
           style={{ width: "100%", minHeight: "50px", backgroundColor: "white", color: "#DC2626", border: "1.5px solid #DC2626", borderRadius: "14px", fontSize: "15px", fontWeight: "600", cursor: "pointer" }}
