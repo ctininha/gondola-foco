@@ -447,12 +447,41 @@ export const History = () => {
         </button>
       </div>
 
-      {/* Cartão de Nota Média */}
+      {/* Cartão de Nota Média com Gráfico SVG */}
       <div style={{ backgroundColor: "#F8FAFC", border: "1.5px solid #E2E8F0", borderRadius: "16px", padding: "16px", marginBottom: "20px" }}>
         <div style={{ fontSize: "12px", color: "#64748B", fontWeight: "600", marginBottom: "2px" }}>Nota média da semana</div>
-        <div style={{ fontSize: "28px", fontWeight: "800", color: "#0F172A", marginBottom: "12px" }}>93</div>
-        <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "10px", height: "70px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8", fontSize: "12px", fontWeight: "600" }}>
-          [ Gráfico de evolução diária ]
+        <div style={{ fontSize: "28px", fontWeight: "800", color: "#0F172A", marginBottom: "8px" }}>93</div>
+        
+        {/* Gráfico de evolução diária real em SVG */}
+        <div style={{ backgroundColor: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "10px", padding: "12px 8px 8px 8px" }}>
+          <svg viewBox="0 0 300 80" style={{ width: "100%", height: "70px", overflow: "visible" }}>
+            {/* Linha de tendência */}
+            <path 
+              d="M 15 55 Q 55 50, 95 40 T 175 45 T 255 30 T 285 38" 
+              fill="none" 
+              stroke="#1366E5" 
+              strokeWidth="2.5" 
+              strokeLinecap="round"
+            />
+            {/* Pontos nos dias */}
+            <circle cx="15" cy="55" r="3.5" fill="#1366E5" />
+            <circle cx="55" cy="52" r="3.5" fill="#1366E5" />
+            <circle cx="95" cy="40" r="3.5" fill="#1366E5" />
+            <circle cx="135" cy="46" r="3.5" fill="#1366E5" />
+            <circle cx="175" cy="42" r="3.5" fill="#1366E5" />
+            <circle cx="215" cy="35" r="4.5" fill="#1366E5" stroke="#FFF" strokeWidth="1.5" />
+            <circle cx="255" cy="30" r="3.5" fill="#1366E5" />
+            <circle cx="285" cy="38" r="3.5" fill="#1366E5" />
+          </svg>
+          <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px", fontSize: "9px", color: "#94A3B8", fontWeight: "700" }}>
+            <span>SEG</span>
+            <span>TER</span>
+            <span>QUA</span>
+            <span>QUI</span>
+            <span>SEX</span>
+            <span>SÁB</span>
+            <span>DOM</span>
+          </div>
         </div>
       </div>
 
